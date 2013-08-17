@@ -1,330 +1,327 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.js?1.29.1"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <style type="text/css">
-    
-        p {
-            margin-left: 25px;
-            font-size: 14px;
-            line-height: 16px;
-            font-family: "Lucida Console", Monaco, monospace;   
-        }
-        p > .score {
-            color: #006400;
-        }
-        #main {
-            position: absolute;
-            left: 400px;
-        }
-    </style>
+<script type="text/javascript" src="http://mbostock.github.com/d3/d3.js?1.29.1"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<style type="text/css">
+p {
+    margin-left: 25px;
+    font-size: 14px;
+    line-height: 16px;
+    font-family: "Lucida Console", Monaco, monospace;   
+}
+p > .score {
+    color: #006400;
+}
+#main {
+    position: absolute;
+    left: 400px;
+}
+</style>
 </head>
- <body>
-    <div id="main">
-    <p class="score"> </p>
-    <p>move left: j, move right: l, go down: k, rotate: i <br>
-       pause: p, restart: r</p>
-    </div>
-    <script type="text/javascript">
-        var xblocks = 10, yblocks = 24;
-        var board  = {
-        config      : d3.range(xblocks * yblocks).map(function(){return 0}),
-        tempconfig  : d3.range(xblocks * yblocks).map(function(){return 0}),
-        pi          : 0,
-        rt          : 0,
-        ypos        : 0,
-        xpos        : 0,
-        updated     : false,
-        newpiece    : true,
-                    gameover    : false,
-                    pause       : false,
-                    score       : 0,
-                    updatetemp  : function(){
-                        pi = this.pi;
-                        sz = size[pi];
-                        or = orient[pi];
-                        pc = pieces[pi][this.rt];
-                        this.tempconfig = this.config.map(function(x){return x;});
-                        for (var i = 0; i < sz; i++){
-                            for (var j = 0; j < sz; j++){
-                                var ind = this.getInd([this.xpos+i,this.ypos+j]);
-                                if (ind < xblocks*yblocks){
-                                    this.tempconfig[ind] = this.config[ind] + pc[sz*j + i];
-                                }
-                            }
+<body>
+<div id="main">
+<p class="score"> </p>
+<p>move left: j, move right: l, go down: k, rotate: i <br>
+   pause: p, restart: r</p>
+</div>
+<script type="text/javascript">
+var xblocks = 10, yblocks = 24;
+var board  = {
+config      : d3.range(xblocks * yblocks).map(function(){return 0}),
+tempconfig  : d3.range(xblocks * yblocks).map(function(){return 0}),
+pi          : 0,
+rt          : 0,
+ypos        : 0,
+xpos        : 0,
+updated     : false,
+newpiece    : true,
+            gameover    : false,
+            pause       : false,
+            score       : 0,
+            updatetemp  : function(){
+                pi = this.pi;
+                sz = size[pi];
+                or = orient[pi];
+                pc = pieces[pi][this.rt];
+                this.tempconfig = this.config.map(function(x){return x;});
+                for (var i = 0; i < sz; i++){
+                    for (var j = 0; j < sz; j++){
+                        var ind = this.getInd([this.xpos+i,this.ypos+j]);
+                        if (ind < xblocks*yblocks){
+                            this.tempconfig[ind] = this.config[ind] + pc[sz*j + i];
                         }
-                    },
-                    collision   : function(){
-                        pi = this.pi;
-                        sz = size[pi];
-                        or = orient[pi];
-                        pc = pieces[pi][this.rt];
-                        for (var i = 0; i < sz; i++){
-                            for (var j = 0; j < sz; j++){
-                                if (( (this.xpos + i > xblocks -1) 
-                                    | (this.xpos + i < 0) 
-                                    | (this.ypos + j >= yblocks))
-                                    & (pc[i + sz*j] > 0)){
-                                    return true;
-                                }
-                                var ind = this.getInd([this.xpos+i,this.ypos+j]);
-                                if (this.config[ind] + pc[i + sz*j] > 1){
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-
-                    },
-        preprocess   : function(){
-        var y = this.ypos + 1;
-        pi = this.pi;
-        sz = size[pi];
-        or = orient[pi];
-        pc = pieces[pi][this.rt];
-
-
-        for (var i = 0; i < sz; i++){
-        for (var j = 0; j < sz; j++){
-        var ind = this.getInd([this.xpos+i,y+j]);
-        if ((this.config[ind] + pc[sz*j + i] > 1) |
-                                    ((ind >= xblocks*yblocks) & (pc[sz*j + i] > 0))) 
-                                {
-        this.newpiece = true;
-                                    this.copytemp();
-        }
-        }
-        }
-                        for (var y = 0; y < 4; y++){
-                            for (var x = 0; x < xblocks; x++){
-                                if (this.config[this.getInd([x,y])] > 0){
-                                    this.gameover = true;
-                                }
-                            }
-                        }
-                        var y, frows = d3.range(yblocks).map(function(){return 0;});
-                        for (y = yblocks - 1; y > -1; y--){
-                            if(this.fullrow(y)){
-                                this.score += 1;
-                                frows[y] = 1;
-                            }
-                        }
-                        var temp = d3.range(yblocks*xblocks).map(function(){return 0;}),
-                            offset = 0;
-                        for (y = yblocks - 1; y > -1; y--){
-                          if(frows[y]){
-                            offset++;
-                          }
-                          else{
-                            for (var x = 0; x < xblocks; x++){
-                                temp[this.getInd([x,y+offset])] = this.config[this.getInd([x,y])];
-                            }
-                          }
-                        }
-                        this.config = temp;
-        },
-                    fullrow     : function(y) {
-                        for (var x = 0; x < xblocks; x++){
-                            if (this.config[this.getInd([x,y])] < 1){
-                                return false;
-                            }
-                        }
-                        return true;
-                    },
-                    copytemp    : function() { this.config = this.tempconfig.map(function(x){return x;})},
-        getInd      : function(ar){return ar[1]*10 + ar[0]},
-        getPos      : function(ind){return [ind % 10, Math.floor(ind/10)]},
-                    refresh     : function(){
-                        this.config = d3.range(xblocks * yblocks).map(function(){return 0});
-                        this.tempconfig = d3.range(xblocks * yblocks).map(function(){return 0});
-                        this.pi          = 0;
-                        this.rt          = 0;
-                        this.ypos        = 0;
-                        this.xpos        = 0;
-                        this.updated     = false;
-                        this.newpiece    = true;
-                        this.gameover    = false;
-                        this.pause       = false;
-                        this.score       = 0;
                     }
-        };
-        var pieces = [[[0,1,0,
-            1,1,1,
-            0,0,0]],
-         [[1,0,0,0,
-           1,0,0,0,
-           1,0,0,0,
-           1,0,0,0]],
-         [[1,0,0,
-           1,0,0,
-           1,1,0]],
-         [[1,1,0,
-           1,0,0,
-           1,0,0]],
-         [[1,1,
-           1,1]],
-         [[1,1,0,
-           0,1,0,
-           0,1,1]],
-         [[0,1,1,
-           0,1,0,
-           1,1,0]]
-           ];
-        var orient = [4,4,4,4,1,4,4];
-        var size = [3,4,3,3,2,3,3];
-        var rotate = function(mt, sz){
-            var ret = [];
-            for (var i = 0; i < sz*sz; i++){
-                var x = i % sz;
-                var y = Math.floor(i /sz);
-                ret.push(mt[(sz-x-1)*sz + y]);
-            }
-            return ret;
-        }
-        for (var i = 0; i < 7; i++){
-            for (var j = 1; j < orient[i]; j++) {
-                pieces[i].push(rotate(pieces[i][j-1], size[i]));
-            };
-        }
+                }
+            },
+            collision   : function(){
+                pi = this.pi;
+                sz = size[pi];
+                or = orient[pi];
+                pc = pieces[pi][this.rt];
+                for (var i = 0; i < sz; i++){
+                    for (var j = 0; j < sz; j++){
+                        if (( (this.xpos + i > xblocks -1) 
+                            | (this.xpos + i < 0) 
+                            | (this.ypos + j >= yblocks))
+                            & (pc[i + sz*j] > 0)){
+                            return true;
+                        }
+                        var ind = this.getInd([this.xpos+i,this.ypos+j]);
+                        if (this.config[ind] + pc[i + sz*j] > 1){
+                            return true;
+                        }
+                    }
+                }
+                return false;
 
-        var side = 20, gapx = 25;
-       var width = side*10 + 2*gapx;
-       var height = side*25;
-        var boardImage = d3.select("#main")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+            },
+preprocess   : function(){
+var y = this.ypos + 1;
+pi = this.pi;
+sz = size[pi];
+or = orient[pi];
+pc = pieces[pi][this.rt];
+
+
+for (var i = 0; i < sz; i++){
+for (var j = 0; j < sz; j++){
+var ind = this.getInd([this.xpos+i,y+j]);
+if ((this.config[ind] + pc[sz*j + i] > 1) |
+                            ((ind >= xblocks*yblocks) & (pc[sz*j + i] > 0))) 
+                        {
+this.newpiece = true;
+                            this.copytemp();
+}
+}
+}
+                for (var y = 0; y < 4; y++){
+                    for (var x = 0; x < xblocks; x++){
+                        if (this.config[this.getInd([x,y])] > 0){
+                            this.gameover = true;
+                        }
+                    }
+                }
+                var y, frows = d3.range(yblocks).map(function(){return 0;});
+                for (y = yblocks - 1; y > -1; y--){
+                    if(this.fullrow(y)){
+                        this.score += 1;
+                        frows[y] = 1;
+                    }
+                }
+                var temp = d3.range(yblocks*xblocks).map(function(){return 0;}),
+                    offset = 0;
+                for (y = yblocks - 1; y > -1; y--){
+                  if(frows[y]){
+                    offset++;
+                  }
+                  else{
+                    for (var x = 0; x < xblocks; x++){
+                        temp[this.getInd([x,y+offset])] = this.config[this.getInd([x,y])];
+                    }
+                  }
+                }
+                this.config = temp;
+},
+            fullrow     : function(y) {
+                for (var x = 0; x < xblocks; x++){
+                    if (this.config[this.getInd([x,y])] < 1){
+                        return false;
+                    }
+                }
+                return true;
+            },
+            copytemp    : function() { this.config = this.tempconfig.map(function(x){return x;})},
+getInd      : function(ar){return ar[1]*10 + ar[0]},
+getPos      : function(ind){return [ind % 10, Math.floor(ind/10)]},
+            refresh     : function(){
+                this.config = d3.range(xblocks * yblocks).map(function(){return 0});
+                this.tempconfig = d3.range(xblocks * yblocks).map(function(){return 0});
+                this.pi          = 0;
+                this.rt          = 0;
+                this.ypos        = 0;
+                this.xpos        = 0;
+                this.updated     = false;
+                this.newpiece    = true;
+                this.gameover    = false;
+                this.pause       = false;
+                this.score       = 0;
+            }
+};
+var pieces = [[[0,1,0,
+                1,1,1,
+                0,0,0]],
+             [[1,0,0,0,
+               1,0,0,0,
+               1,0,0,0,
+               1,0,0,0]],
+             [[1,0,0,
+               1,0,0,
+               1,1,0]],
+             [[1,1,0,
+               1,0,0,
+               1,0,0]],
+             [[1,1,
+               1,1]],
+             [[1,1,0,
+               0,1,0,
+               0,1,1]],
+             [[0,1,1,
+               0,1,0,
+               1,1,0]]
+               ];
+var orient = [4,4,4,4,1,4,4];
+var size = [3,4,3,3,2,3,3];
+var rotate = function(mt, sz){
+    var ret = [];
+    for (var i = 0; i < sz*sz; i++){
+        var x = i % sz;
+        var y = Math.floor(i /sz);
+        ret.push(mt[(sz-x-1)*sz + y]);
+    }
+    return ret;
+}
+for (var i = 0; i < 7; i++){
+    for (var j = 1; j < orient[i]; j++) {
+        pieces[i].push(rotate(pieces[i][j-1], size[i]));
+    };
+}
+
+var side = 20, gapx = 25;
+var width = side*10 + 2*gapx;
+var height = side*25;
+var boardImage = d3.select("#main")
+.append("svg")
+.attr("width", width)
+.attr("height", height);
+
+
+
+var render = function() {
+    board.updatetemp();
+boardImage.selectAll("g.square").remove();
+
+    var g = boardImage.selectAll("g")
+    .data(board.tempconfig)
+    .enter().append("g")
+            .attr("class","square");
+
+    var square = g.append("rect")
+    .attr("width", 20)
+    .attr("height", 20)
+    .attr("x", function(d, i){ return (gapx + side*board.getPos(i)[0])})
+    .attr("y", function(d, i){ return (side*(1+board.getPos(i)[1]))})
+    .attr("fill", function(d){if (d === 0) return "white"; else return "teal"});
+    boardImage.append("line")
+                .attr("x1", gapx)
+                .attr("y1", 0)
+                .attr("x2", gapx)
+                .attr("y2", height)
+                .attr("stroke", "black");
+    boardImage.append("line")
+                .attr("x1", 10*side + gapx)
+                .attr("y1", 0)
+                .attr("x2", 10*side + gapx)
+                .attr("y2", height)
+                .attr("stroke", "black");
+    boardImage.append("line")
+                .attr("x1", gapx)
+                .attr("y1", height)
+                .attr("x2", width - gapx)
+                .attr("y2", height)
+                .attr("stroke", "black");
+    boardImage.append("rect")
+                .attr("width", 200)
+                .attr("height", 400)
+                .attr("x", gapx)
+                .attr("y", 100)
+                .attr("fill", "#eee")
+                .attr("fill-opacity",0.25);
+
+    d3.select(".score")
+            .text("score: " + board.score);
+
     
-        
+};
 
-        var render = function() {
-            board.updatetemp();
-        boardImage.selectAll("g.square").remove();
+var increment = function(){
+    if(board.gameover){
+        return;
+    }
+    board.preprocess();
+    if(board.gameover){
+         boardImage.append("rect")
+                .attr("width", 200)
+                .attr("height", 400)
+                .attr("x", gapx)
+                .attr("y", 100)
+                .attr("fill", "#e42")
+                .attr("fill-opacity",0.25);
+        return;
+    }
+    if(board.newpiece){
+        board.newpiece = false;
+        board.xpos = Math.floor(5*Math.random());
+        board.ypos = 0;
+        board.rt = 0;
+        board.pi = Math.floor(7*Math.random());
+    }
+    else{
+        if (!board.pause){
+            board.ypos += 1;
+        }
+    }
 
-            var g = boardImage.selectAll("g")
-            .data(board.tempconfig)
-            .enter().append("g")
-                    .attr("class","square");
+    render();
+};
 
-            var square = g.append("rect")
-            .attr("width", 20)
-            .attr("height", 20)
-            .attr("x", function(d, i){ return (gapx + side*board.getPos(i)[0])})
-            .attr("y", function(d, i){ return (side*(1+board.getPos(i)[1]))})
-            .attr("fill", function(d){if (d === 0) return "white"; else return "teal"});
-            boardImage.append("line")
-                        .attr("x1", gapx)
-                        .attr("y1", 0)
-                        .attr("x2", gapx)
-                        .attr("y2", height)
-                        .attr("stroke", "black");
-            boardImage.append("line")
-                        .attr("x1", 10*side + gapx)
-                        .attr("y1", 0)
-                        .attr("x2", 10*side + gapx)
-                        .attr("y2", height)
-                        .attr("stroke", "black");
-            boardImage.append("line")
-                        .attr("x1", gapx)
-                        .attr("y1", height)
-                        .attr("x2", width - gapx)
-                        .attr("y2", height)
-                        .attr("stroke", "black");
-            boardImage.append("rect")
-                        .attr("width", 200)
-                        .attr("height", 400)
-                        .attr("x", gapx)
-                        .attr("y", 100)
-                        .attr("fill", "#eee")
-                        .attr("fill-opacity",0.25);
-
-            d3.select(".score")
-                    .text("score: " + board.score);
-
-            
-        };
-
-        var increment = function(){
-            if(board.gameover){
-                return;
-            }
-            board.preprocess();
-            if(board.gameover){
-                 boardImage.append("rect")
-                        .attr("width", 200)
-                        .attr("height", 400)
-                        .attr("x", gapx)
-                        .attr("y", 100)
-                        .attr("fill", "#e42")
-                        .attr("fill-opacity",0.25);
-                return;
-            }
-            if(board.newpiece){
-                board.newpiece = false;
-                board.xpos = Math.floor(5*Math.random());
-                board.ypos = 0;
-                board.rt = 0;
-                board.pi = Math.floor(7*Math.random());
-            }
-            else{
-                if (!board.pause){
-                    board.ypos += 1;
-                }
-            }
-
+$("body").keypress(function(e){
+    if(e.which === 106){
+        board.xpos -= 1;
+        if(!board.collision()){
             render();
-        };
+        }
+        else{
+            board.xpos += 1;
+        }
+    }
+    else if (e.which === 108){
+        board.xpos += 1;
+        if(!board.collision()){
+            render();
+        }
+        else{
+            board.xpos -= 1;
+        }
+    }
+    else if (e.which === 107){
+        board.ypos += 1;
+        if(!board.collision()){
+            render();
+        }
+        else{
+            board.ypos -= 1;
+        }
+    }
+    else if (e.which === 105){
+        var tmp = board.rt
+        board.rt = (board.rt + 1) % orient[board.pi];
+        if(!board.collision()){
+            render();
+        }
+        else{
+            board.rt = tmp;
+        }
+    }
+    else if (e.which === 112){
+        board.pause = !board.pause;
+    }
+    else if (e.which === 114){
+        board.refresh();
+    }
+});
 
-        $("body").keypress(function(e){
-            if(e.which === 106){
-                board.xpos -= 1;
-                if(!board.collision()){
-                    render();
-                }
-                else{
-                    board.xpos += 1;
-                }
-            }
-            else if (e.which === 108){
-                board.xpos += 1;
-                if(!board.collision()){
-                    render();
-                }
-                else{
-                    board.xpos -= 1;
-                }
-            }
-            else if (e.which === 107){
-                board.ypos += 1;
-                if(!board.collision()){
-                    render();
-                }
-                else{
-                    board.ypos -= 1;
-                }
-            }
-            else if (e.which === 105){
-                var tmp = board.rt
-                board.rt = (board.rt + 1) % orient[board.pi];
-                if(!board.collision()){
-                    render();
-                }
-                else{
-                    board.rt = tmp;
-                }
-            }
-            else if (e.which === 112){
-                board.pause = !board.pause;
-            }
-            else if (e.which === 114){
-                board.refresh();
-            }
-            // console.log(e.which);
-        });
-
-        increment();
-      setInterval(increment, 200);
-
-    </script>
+increment();
+setInterval(increment, 200);
+</script>
 </body>
