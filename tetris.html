@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<script type="text/javascript" src="http://mbostock.github.com/d3/d3.js?1.29.1"></script>
+    <script type="text/javascript" src="http://mbostock.github.com/d3/d3.js?1.29.1"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-	<style type="text/css">
-		
+    <style type="text/css">
+    
         p {
             margin-left: 25px;
             font-size: 14px;
@@ -18,7 +18,7 @@
             position: absolute;
             left: 400px;
         }
-	</style>
+    </style>
 </head>
  <body>
     <div id="main">
@@ -27,16 +27,16 @@
        pause: p, restart: r</p>
     </div>
     <script type="text/javascript">
-    	var xblocks = 10, yblocks = 24;
-    	var board  = {
-    				config      : d3.range(xblocks * yblocks).map(function(){return 0}),
-    				tempconfig  : d3.range(xblocks * yblocks).map(function(){return 0}),
-    				pi          : 0,
-    				rt          : 0,
-    				ypos        : 0,
-    				xpos        : 0,
-    				updated     : false,
-    				newpiece	: true,
+        var xblocks = 10, yblocks = 24;
+        var board  = {
+        config      : d3.range(xblocks * yblocks).map(function(){return 0}),
+        tempconfig  : d3.range(xblocks * yblocks).map(function(){return 0}),
+        pi          : 0,
+        rt          : 0,
+        ypos        : 0,
+        xpos        : 0,
+        updated     : false,
+        newpiece    : true,
                     gameover    : false,
                     pause       : false,
                     score       : 0,
@@ -77,25 +77,25 @@
                         return false;
 
                     },
-    				preprocess   : function(){
-    					var y = this.ypos + 1;
-    					pi = this.pi;
-    					sz = size[pi];
-    					or = orient[pi];
-    					pc = pieces[pi][this.rt];
+        preprocess   : function(){
+        var y = this.ypos + 1;
+        pi = this.pi;
+        sz = size[pi];
+        or = orient[pi];
+        pc = pieces[pi][this.rt];
 
 
-    					for (var i = 0; i < sz; i++){
-    						for (var j = 0; j < sz; j++){
-    							var ind = this.getInd([this.xpos+i,y+j]);
-    							if ((this.config[ind] + pc[sz*j + i] > 1) |
+        for (var i = 0; i < sz; i++){
+        for (var j = 0; j < sz; j++){
+        var ind = this.getInd([this.xpos+i,y+j]);
+        if ((this.config[ind] + pc[sz*j + i] > 1) |
                                     ((ind >= xblocks*yblocks) & (pc[sz*j + i] > 0))) 
                                 {
-    								this.newpiece = true;
+        this.newpiece = true;
                                     this.copytemp();
-    							}
-    						}
-    					}
+        }
+        }
+        }
                         for (var y = 0; y < 4; y++){
                             for (var x = 0; x < xblocks; x++){
                                 if (this.config[this.getInd([x,y])] > 0){
@@ -123,7 +123,7 @@
                           }
                         }
                         this.config = temp;
-    				},
+        },
                     fullrow     : function(y) {
                         for (var x = 0; x < xblocks; x++){
                             if (this.config[this.getInd([x,y])] < 1){
@@ -133,8 +133,8 @@
                         return true;
                     },
                     copytemp    : function() { this.config = this.tempconfig.map(function(x){return x;})},
-    				getInd      : function(ar){return ar[1]*10 + ar[0]},
-    				getPos      : function(ind){return [ind % 10, Math.floor(ind/10)]},
+        getInd      : function(ar){return ar[1]*10 + ar[0]},
+        getPos      : function(ind){return [ind % 10, Math.floor(ind/10)]},
                     refresh     : function(){
                         this.config = d3.range(xblocks * yblocks).map(function(){return 0});
                         this.tempconfig = d3.range(xblocks * yblocks).map(function(){return 0});
@@ -148,31 +148,31 @@
                         this.pause       = false;
                         this.score       = 0;
                     }
-    	};
-    	var pieces = [[[0,1,0,
-    				    1,1,1,
-    				    0,0,0]],
-    				 [[1,0,0,0,
-    				   1,0,0,0,
-    				   1,0,0,0,
-    				   1,0,0,0]],
-    				 [[1,0,0,
-    				   1,0,0,
-    				   1,1,0]],
-    				 [[1,1,0,
-    				   1,0,0,
-    				   1,0,0]],
-    				 [[1,1,
-    				   1,1]],
-    				 [[1,1,0,
-    				   0,1,0,
-    				   0,1,1]],
-    				 [[0,1,1,
-    				   0,1,0,
-    				   1,1,0]]
-    				   ];
-    	var orient = [4,4,4,4,1,4,4];
-    	var size = [3,4,3,3,2,3,3];
+        };
+        var pieces = [[[0,1,0,
+            1,1,1,
+            0,0,0]],
+         [[1,0,0,0,
+           1,0,0,0,
+           1,0,0,0,
+           1,0,0,0]],
+         [[1,0,0,
+           1,0,0,
+           1,1,0]],
+         [[1,1,0,
+           1,0,0,
+           1,0,0]],
+         [[1,1,
+           1,1]],
+         [[1,1,0,
+           0,1,0,
+           0,1,1]],
+         [[0,1,1,
+           0,1,0,
+           1,1,0]]
+           ];
+        var orient = [4,4,4,4,1,4,4];
+        var size = [3,4,3,3,2,3,3];
         var rotate = function(mt, sz){
             var ret = [];
             for (var i = 0; i < sz*sz; i++){
@@ -189,30 +189,30 @@
         }
 
         var side = 20, gapx = 25;
-   		var width = side*10 + 2*gapx;
-   		var height = side*25;
-    	var boardImage = d3.select("#main")
-    						.append("svg")
-    						.attr("width", width)
-    						.attr("height", height);
+       var width = side*10 + 2*gapx;
+       var height = side*25;
+        var boardImage = d3.select("#main")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
     
         
 
         var render = function() {
             board.updatetemp();
-    		boardImage.selectAll("g.square").remove();
+        boardImage.selectAll("g.square").remove();
 
             var g = boardImage.selectAll("g")
-	    				.data(board.tempconfig)
-	    			.enter().append("g")
+            .data(board.tempconfig)
+            .enter().append("g")
                     .attr("class","square");
 
-	    	var square = g.append("rect")
-	    				.attr("width", 20)
-	    				.attr("height", 20)
-	    				.attr("x", function(d, i){ return (gapx + side*board.getPos(i)[0])})
-	    				.attr("y", function(d, i){ return (side*(1+board.getPos(i)[1]))})
-	    				.attr("fill", function(d){if (d === 0) return "white"; else return "teal"});
+            var square = g.append("rect")
+            .attr("width", 20)
+            .attr("height", 20)
+            .attr("x", function(d, i){ return (gapx + side*board.getPos(i)[0])})
+            .attr("y", function(d, i){ return (side*(1+board.getPos(i)[1]))})
+            .attr("fill", function(d){if (d === 0) return "white"; else return "teal"});
             boardImage.append("line")
                         .attr("x1", gapx)
                         .attr("y1", 0)
@@ -243,7 +243,7 @@
                     .text("score: " + board.score);
 
             
-    	};
+        };
 
         var increment = function(){
             if(board.gameover){
@@ -323,8 +323,8 @@
             // console.log(e.which);
         });
 
-    	increment();
-  		setInterval(increment, 200);
+        increment();
+      setInterval(increment, 200);
 
     </script>
 </body>
