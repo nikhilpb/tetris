@@ -1,6 +1,6 @@
 from flask import Flask, render_template
-app = Flask(__name__)
+tetris = Flask(__name__)
 
-@app.route('/')
+@tetris.route('/')
 def index():
     return render_template('tetris.html')
